@@ -33,13 +33,13 @@ io.on('connection', function(socket) {
           "messaging":[
             {
               "sender":{
-                "id":"USER_ID"
+                "id":msg.user_id
               },
               "recipient":{
                 "id":"PAGE_ID"
               },
               "message": {
-                "text": msg
+                "text": msg.message
               }
             }
           ]
@@ -81,7 +81,7 @@ io.on('connection', function(socket) {
       console.log('problem with request:' + e.message);
     });
 
-    console.log('Received message');
+    console.log('Received message: ', msg);
     var postData = JSON.stringify(formData);
     // write data to request body
     console.log('Sending data (length: ' + postData.length + '): ' + postData);

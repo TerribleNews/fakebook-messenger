@@ -21,9 +21,10 @@
   <script src="/socket.io/socket.io.js"></script>
   <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
   <script>
+  var userid = Math.random();
   var socket = io();
   $('form').submit(function() {
-    socket.emit('chat message', $('#m').val());
+    socket.emit('chat message', {"user_id": userid, "message":$('#m').val()});
     $('#m').val('');
     return false;
   });
