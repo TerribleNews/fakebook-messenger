@@ -4,10 +4,34 @@ var io = require('socket.io')(http);
 var request = require('request');
 var FormData = require('form-data');
 var https = require('http');
+var mongo = require('mongodb'),
+  Server = mongo.Server,
+  Db = mongo.Db;
 
 var bodyParser = require('body-parser');
 
 app.use(bodyParser.json()); // for parsing application/json
+
+var server = new Server('localhost', 3303, {auto_reconnect: true});
+var db = new Db('exampleDb', server);
+
+// This code should probably all go into another module or something
+db.open(function(err, db) {
+  if(!err) {
+    console.log("We are connected");
+  }
+});
+
+var userCollection = db.collection('users', function(err,collectionref) {
+  if (err)
+    console.log("Error getting users collecdtion:", err);
+});
+
+var messageCollection = db.collection('messages', function(err, collectionref){
+  if (err)
+    console.log("Error gettign messages collection:", err);
+});
+
 
 app.get('/', function(req, res){
   res.sendFile(__dirname + '/index.html');
@@ -23,7 +47,26 @@ app.post('/fakebook', function(req, res){
 
 io.on('connection', function(socket) {
   console.log('a user connected');
+
   socket.on('chat message', function(msg){
+    var user = userCollection.findOne({user_id:msg.user_id}, function(err,result){
+      if (err) {
+        console.log("Error finding user document in db:", err)
+      } else {
+        if (result == null) {
+          // create a new record
+          user = userCollection.insert({user_id:msg.user_id}, function(err,result){
+            if (err) {
+              console.log("Unable to create user:", err);
+            } else {
+              console.log("Created user: ", result);
+            }
+          });
+        }
+        console.log("Retrived user record: ", result);
+      }
+    });
+
     var formData = {
       "object":"page",
       "entry":[
@@ -61,6 +104,17 @@ io.on('connection', function(socket) {
       }
     };
 
+    var msg_rec = messageCollection.insert({user: user, message: formData.entry[0].messaging}, function(err,res){
+      if (err)
+      {
+        console.log("Unable to insert message into db:", err);
+      }
+      else
+      {
+        console.log("Inserted message into db:", res);
+      }
+    });
+
     var req = https.request(options, function(res)
     {
       console.log('STATUS: ' + res.statusCode);
@@ -93,6 +147,8 @@ io.on('connection', function(socket) {
     console.log('user disconnected');
   });
 });
+
+
 
 http.listen(3000, function() {
   console.log('listening on *:3000');
