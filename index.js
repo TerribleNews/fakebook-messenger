@@ -5,11 +5,19 @@ var request = require('request');
 var https = require('http');
 var bodyParser = require('body-parser');
 var mongo = require('./database');
+var mustache = require('mustache');
+var engines = require('consolidate');
 
 app.use(bodyParser.json()); // for parsing application/json
+app.set('views', __dirname + '/views');
+app.engine('html', engines.mustache);
+app.set('view engine', 'html');
 
 app.get('/', function(req, res){
-  res.sendFile(__dirname + '/index.html');
+  res.render('index.html', {
+    locals: {},
+    partials: {}
+  });
 });
 
 app.post('/fakebook', function(req, res){
