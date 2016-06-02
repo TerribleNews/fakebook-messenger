@@ -1,12 +1,14 @@
 var app = require('express')();
-var http = require('http').Server(app);
-var io = require('socket.io')(http);
+var http = require('http')
+var server = http.Server(app);
+var io = require('socket.io')(server);
 var request = require('request');
-var https = require('http');
+var https = require('https');
 var bodyParser = require('body-parser');
 var mongo = require('./database');
 var mustache = require('mustache');
 var engines = require('consolidate');
+var fs = require('fs');
 
 app.use(bodyParser.json()); // for parsing application/json
 app.set('views', __dirname + '/views');
@@ -18,6 +20,16 @@ app.get('/', function(req, res){
     locals: {},
     partials: {}
   });
+});
+
+var fakebook = https.createServer({
+  key:  fs.readFileSync('./server.key'),
+  cert: fs.readFileSync('./server.crt'),
+  ca:   fs.readFileSync('./ca.crt'),
+  requestCert: true,
+  rejectUnauthorized: false
+}, app).listen('3443', function() {
+  console.log("Secure Express server listen ing on port 3443");
 });
 
 app.post('/fakebook', function(req, res){
@@ -100,7 +112,7 @@ io.on('connection', function(socket) {
         }
       });
 
-      var req = https.request(options, function(res)
+      var req = http.request(options, function(res)
       {
         console.log('STATUS: ' + res.statusCode);
         console.log('HEADERS: ' + JSON.stringify(res.headers));
@@ -136,6 +148,6 @@ io.on('connection', function(socket) {
 
 
 
-http.listen(3000, function() {
+server.listen(3000, function() {
   console.log('listening on *:3000');
 });
