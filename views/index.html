@@ -8,9 +8,27 @@
   form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
   form input {border: 0; padding: 10px; width: 90%; margin-right: .5%; }
   form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
-  #messages { list-style-type: none; margin: 0; padding: 0; }
+  #messages { list-style-type: none; margin: 0; padding: 0; max-width: 80em; margin-bottom:58px;}
   #messages li { padding: 5px 10px; }
   #messages li:nth-child(odd) { background: #eee; }
+  li.me {
+    position: relative;
+    left: 20%;
+    width: 75%;
+    border: 1px solid steelblue;
+    border-radius: 3px;
+    padding: 2em;
+    margin: 1em 1em 0em 1em;
+  }
+  li.you {
+    position: relative;
+    left: 0%;
+    width: 75%;
+    border: 1px solid cadetblue;
+    border-radius: 3px;
+    padding: 2em;
+    margin: 1em 1em 0em 1em;
+  }
   </style>
 </head>
 <body>
@@ -25,11 +43,14 @@
   var socket = io();
   $('form').submit(function() {
     socket.emit('chat message', {"user_id": userid, "message":$('#m').val()});
+    $('#messages').append($('<li class="me">').html($('#m').val().replace(/\n/g, "<br>")));
+    $("html, body").animate({ scrollTop: $(document).height() }, 500);
     $('#m').val('');
     return false;
   });
   socket.on('chat message', function(msg){
-    $('#messages').append($('<li>').html(msg.replace(/\n/g, "<br>")));
+    $('#messages').append($('<li class="you">').html(msg.replace(/\n/g, "<br>")));
+    $("html, body").animate({ scrollTop: $(document).height() }, 500);
   });
   </script>
 </body>
